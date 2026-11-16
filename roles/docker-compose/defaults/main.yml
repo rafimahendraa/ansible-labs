@@ -1,0 +1,14 @@
+
+---
+# Docker Compose deployment directory
+docker_compose_base_dir: /opt
+
+# Docker Compose services
+docker_compose_services:
+  - name: grafana
+    project_dir: /opt/grafana
+    compose_file: docker-compose.yml
+
+  - name: silo
+    project_dir: /opt/silo
+    compose_file: docker-compose.yml

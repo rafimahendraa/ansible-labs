@@ -1,0 +1,38 @@
+---
+- name: Install Nginx
+  ansible.builtin.apt:
+    name: "{{ nginx_package }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Deploy Nginx main configuration
+  ansible.builtin.copy:
+    src: "{{ nginx_main_config_src }}"
+    dest: "{{ nginx_main_config_dest }}"
+    owner: root
+    group: root
+    mode: "0644"
+    backup: true
+  notify: Reload Nginx
+
+- name: Deploy Nginx reverse proxy configurations
+  ansible.builtin.copy:
+    src: "{{ nginx_service_config_src }}/{{ item }}"
+    dest: "{{ nginx_service_config_dest }}/{{ item }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop: "{{ nginx_service_configs }}"
+  notify: Reload Nginx
+
+- name: Validate Nginx configuration
+  ansible.builtin.command:
+    cmd: nginx -t
+  changed_when: false
+
+- name: Ensure Nginx is enabled and running
+  ansible.builtin.service:
+    name: "{{ nginx_service }}"
+    state: started
+    enabled: true

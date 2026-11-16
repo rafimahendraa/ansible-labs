@@ -1,0 +1,19 @@
+
+---
+# Nginx package and service
+nginx_package: nginx
+nginx_service: nginx
+
+# Nginx main configuration
+nginx_main_config_src: "{{ playbook_dir }}/inventory/files/nginx/nginx.conf"
+nginx_main_config_dest: /etc/nginx/nginx.conf
+
+# Nginx reverse proxy service configurations
+nginx_service_config_src: "{{ playbook_dir }}/inventory/files/nginx/service"
+nginx_service_config_dest: /etc/nginx/conf.d
+
+nginx_service_configs:
+  - grafana.conf
+  - silo-api.conf
+  - silo-console.conf
+

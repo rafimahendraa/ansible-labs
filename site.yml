@@ -1,0 +1,10 @@
+---
+- name: Provision Ubuntu Server
+  hosts: webservers
+  become: true
+
+  roles:
+    - common
+    - docker
+    - docker-compose
+    - nginx

@@ -1,0 +1,24 @@
+
+---
+# Docker official repository
+docker_repository_url: "https://download.docker.com/linux/ubuntu"
+docker_gpg_key_url: "https://download.docker.com/linux/ubuntu/gpg"
+
+# Docker APT keyring
+docker_apt_keyring_dir: /etc/apt/keyrings
+docker_apt_keyring: /etc/apt/keyrings/docker.asc
+
+# Docker repository configuration
+docker_repository_filename: docker
+docker_repository_channel: stable
+
+# Docker packages
+docker_packages:
+  - docker-ce
+  - docker-ce-cli
+  - containerd.io
+  - docker-buildx-plugin
+  - docker-compose-plugin
+
+# Docker service
+docker_service_name: docker

@@ -1,0 +1,78 @@
+
+---
+- name: Validate supported operating system
+  ansible.builtin.assert:
+    that:
+      - ansible_distribution == "Ubuntu"
+      - ansible_distribution_version in ["24.04", "26.04"]
+    fail_msg: "Docker role supports Ubuntu 24.04 and 26.04 only."
+
+- name: Install Docker repository prerequisites
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Create APT keyring directory
+  ansible.builtin.file:
+    path: "{{ docker_apt_keyring_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Download Docker official GPG key
+  ansible.builtin.get_url:
+    url: "{{ docker_gpg_key_url }}"
+    dest: "{{ docker_apt_keyring }}"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Get system architecture
+  ansible.builtin.command:
+    cmd: dpkg --print-architecture
+  register: docker_architecture_result
+  changed_when: false
+
+- name: Add Docker official APT repository
+  ansible.builtin.apt_repository:
+    repo: >-
+      deb [arch={{ docker_architecture_result.stdout }}
+      signed-by={{ docker_apt_keyring }}]
+      {{ docker_repository_url }}
+      {{ ansible_distribution_release }}
+      {{ docker_repository_channel }}
+    filename: "{{ docker_repository_filename }}"
+    state: present
+    update_cache: true
+
+- name: Install Docker Engine and plugins
+  ansible.builtin.apt:
+    name: "{{ docker_packages }}"
+    state: present
+    update_cache: true
+
+- name: Ensure Docker service is enabled and running
+  ansible.builtin.service:
+    name: "{{ docker_service_name }}"
+    state: started
+    enabled: true
+
+- name: Verify Docker Engine
+  ansible.builtin.command:
+    cmd: docker version
+  changed_when: false
+
+- name: Verify Docker Compose
+  ansible.builtin.command:
+    cmd: docker compose version
+  changed_when: false
+
+- name: Verify Docker Buildx
+  ansible.builtin.command:
+    cmd: docker buildx version
+  changed_when: false

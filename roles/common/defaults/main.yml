@@ -1,0 +1,45 @@
+
+---
+# Supported operating systems
+common_supported_distribution: Ubuntu
+common_supported_versions:
+  - "24.04"
+  - "26.04"
+
+# APT configuration
+common_apt_cache_valid_time: 3600
+common_apt_upgrade: dist
+
+# Common packages
+common_packages:
+  # Repository prerequisites
+  - ca-certificates
+  - curl
+  - wget
+  - gnupg
+  - lsb-release
+  - software-properties-common
+  - apt-transport-https
+
+  # Python
+  - python3
+  - python3-pip
+  - python3-venv
+
+  # System administration
+  - git
+  - vim
+  - nano
+  - htop
+  - jq
+  - unzip
+  - zip
+  - tar
+  - xz-utils
+  - net-tools
+  - dnsutils
+  - iputils-ping
+  - rsync
+  - bash-completion
+  - tree
+  - chrony
