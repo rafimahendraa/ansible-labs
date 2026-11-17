@@ -17,6 +17,8 @@
     group: root
     mode: "0755"
   loop: "{{ docker_compose_files.files }}"
+  loop_control:
+    label: "{{ item.path | dirname | basename }}"
 
 - name: Copy Docker Compose files to target server
   ansible.builtin.copy:
@@ -26,6 +28,42 @@
     group: root
     mode: "0644"
   loop: "{{ docker_compose_files.files }}"
+  loop_control:
+    label: "{{ item.path | dirname | basename }}"
+
+- name: Check HTML directories
+  ansible.builtin.stat:
+    path: "{{ item.path | dirname }}/html"
+  delegate_to: localhost
+  become: false
+  loop: "{{ docker_compose_files.files }}"
+  loop_control:
+    label: "{{ item.path | dirname | basename }}"
+  register: docker_compose_html_checks
+
+- name: Create HTML directories on target server
+  ansible.builtin.file:
+    path: "{{ docker_compose_deploy_dir }}/{{ item.item.path | dirname | basename }}/html"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop: "{{ docker_compose_html_checks.results }}"
+  loop_control:
+    label: "{{ item.item.path | dirname | basename }}"
+  when: item.stat.isdir | default(false)
+
+- name: Copy HTML files to target server
+  ansible.builtin.copy:
+    src: "{{ item.item.path | dirname }}/html/"
+    dest: "{{ docker_compose_deploy_dir }}/{{ item.item.path | dirname | basename }}/html/"
+    owner: root
+    group: root
+    mode: preserve
+  loop: "{{ docker_compose_html_checks.results }}"
+  loop_control:
+    label: "{{ item.item.path | dirname | basename }}"
+  when: item.stat.isdir | default(false)
 
 - name: Validate Docker Compose configuration
   ansible.builtin.command:
@@ -33,9 +71,13 @@
     chdir: "{{ docker_compose_deploy_dir }}/{{ item.path | dirname | basename }}"
   changed_when: false
   loop: "{{ docker_compose_files.files }}"
+  loop_control:
+    label: "{{ item.path | dirname | basename }}"
 
 - name: Deploy Docker Compose applications
   ansible.builtin.command:
     cmd: "docker compose -f {{ docker_compose_filename }} up -d"
     chdir: "{{ docker_compose_deploy_dir }}/{{ item.path | dirname | basename }}"
   loop: "{{ docker_compose_files.files }}"
+  loop_control:
+    label: "{{ item.path | dirname | basename }}"
