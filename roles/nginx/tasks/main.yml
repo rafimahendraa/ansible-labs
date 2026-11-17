@@ -104,7 +104,7 @@
 
 - name: Deploy Nginx main configuration
   ansible.builtin.copy:
-    src: "{{ nginx_main_config_src }}"
+    src: "{{ playbook_dir }}/../inventory/files/nginx/nginx.conf"
     dest: "{{ nginx_main_config_dest }}"
     owner: root
     group: root
@@ -114,7 +114,7 @@
 
 - name: Deploy Nginx reverse proxy configurations
   ansible.builtin.copy:
-    src: "{{ nginx_service_config_src }}/{{ item }}"
+    src: "{{ playbook_dir }}/../inventory/files/nginx/service/{{ item }}"
     dest: "{{ nginx_service_config_dest }}/{{ item }}"
     owner: root
     group: root

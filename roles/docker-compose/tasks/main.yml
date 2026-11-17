@@ -11,7 +11,7 @@
 
 - name: Copy Docker Compose files to target server
   ansible.builtin.copy:
-    src: "{{ playbook_dir }}/inventory/files/{{ item.name }}/{{ item.compose_file }}"
+    src: "{{ playbook_dir }}/../inventory/files/{{ item.name }}/{{ item.compose_file }}"
     dest: "{{ item.project_dir }}/{{ item.compose_file }}"
     owner: root
     group: root
@@ -20,7 +20,7 @@
 
 - name: Copy Silo environment file securely
   ansible.builtin.copy:
-    src: "{{ playbook_dir }}/inventory/files/silo/.env"
+    src: "{{ playbook_dir }}/../inventory/files/silo/.env"
     dest: "/opt/silo/.env"
     owner: root
     group: root
@@ -29,14 +29,14 @@
 
 - name: Validate Docker Compose configuration
   ansible.builtin.command:
-    cmd: docker compose -f {{ item.compose_file }} config --quiet
+    cmd: "docker compose -f {{ item.compose_file }} config --quiet"
     chdir: "{{ item.project_dir }}"
   changed_when: false
   loop: "{{ docker_compose_services }}"
 
 - name: Deploy Docker Compose applications
   ansible.builtin.command:
-    cmd: docker compose -f {{ item.compose_file }} up -d
+    cmd: "docker compose -f {{ item.compose_file }} up -d"
     chdir: "{{ item.project_dir }}"
   loop: "{{ docker_compose_services }}"
 
