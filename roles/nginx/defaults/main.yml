@@ -1,19 +1,27 @@
-
 ---
-# Nginx package and service
-nginx_package: nginx
-nginx_service: nginx
+nginx_package: "nginx"
+nginx_service: "nginx"
 
-# Nginx main configuration
 nginx_main_config_src: "{{ playbook_dir }}/inventory/files/nginx/nginx.conf"
-nginx_main_config_dest: /etc/nginx/nginx.conf
-
-# Nginx reverse proxy service configurations
+nginx_main_config_dest: "/etc/nginx/nginx.conf"
 nginx_service_config_src: "{{ playbook_dir }}/inventory/files/nginx/service"
-nginx_service_config_dest: /etc/nginx/conf.d
-
+nginx_service_config_dest: "/etc/nginx/conf.d"
 nginx_service_configs:
-  - grafana.conf
-  - silo-api.conf
-  - silo-console.conf
+  - "grafana.conf"
+  - "silo.conf"
 
+nginx_ssl_dir: "/etc/nginx/ssl/techcornerrio.web.id"
+nginx_acme_account_key: "{{ nginx_ssl_dir }}/account.key"
+nginx_ssl_privkey: "{{ nginx_ssl_dir }}/privkey.pem"
+nginx_ssl_csr: "{{ nginx_ssl_dir }}/request.csr"
+nginx_ssl_cert: "{{ nginx_ssl_dir }}/cert.pem"
+nginx_ssl_chain: "{{ nginx_ssl_dir }}/chain.pem"
+nginx_ssl_fullchain: "{{ nginx_ssl_dir }}/fullchain.pem"
+
+nginx_acme_email: "admin@techcornerrio.web.id"
+nginx_acme_directory: "https://acme-v02.api.letsencrypt.org/directory"
+nginx_dns_resolver: "1.1.1.1"
+nginx_cert_common_name: "grafana.techcornerrio.web.id"
+nginx_cert_san:
+  - "DNS:grafana.techcornerrio.web.id"
+  - "DNS:silo.techcornerrio.web.id"

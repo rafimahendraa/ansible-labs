@@ -1,0 +1,7 @@
+---
+- name: Configure Nginx and Setup Let's Encrypt SSL (DNS-01)
+  hosts: webservers
+  become: true
+
+  roles:
+    - nginx

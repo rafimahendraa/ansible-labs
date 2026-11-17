@@ -1,0 +1,49 @@
+
+# Ansible inventory
+inventory/hosts.ini
+inventory/hosts
+
+# Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa
+id_ed25519
+vault-password.txt
+.vault-pass
+credentials.yml
+credentials.yaml
+secrets.yml
+secrets.yaml
+
+# Ansible
+*.retry
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+
+# Backup
+*.bak
+*.old
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
