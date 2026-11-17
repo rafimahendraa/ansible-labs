@@ -1,29 +1,45 @@
-
 ---
-- name: Check Docker Compose files
-  ansible.builtin.stat:
-    path: "{{ item.project_dir }}/{{ item.compose_file }}"
-  loop: "{{ cleanup_compose_services }}"
-  register: compose_file_checks
+- name: Find Docker Compose files
+  ansible.builtin.find:
+    paths: "{{ cleanup_compose_source_dir }}"
+    patterns: "{{ cleanup_compose_filename }}"
+    file_type: file
+    recurse: true
+  delegate_to: localhost
+  become: false
+  register: cleanup_compose_files
 
-- name: Stop and remove Docker Compose services
+- name: Stop Docker Compose services
   ansible.builtin.command:
-    cmd: docker compose -f {{ item.item.compose_file }} down
-    chdir: "{{ item.item.project_dir }}"
-  loop: "{{ compose_file_checks.results }}"
-  when: item.stat.exists
+    cmd: docker compose -f {{ cleanup_compose_filename }} down
+    chdir: "{{ cleanup_compose_deploy_dir }}/{{ item.path | dirname | basename }}"
+  loop: "{{ cleanup_compose_files.files }}"
+  when: >
+    stat_result.stat.exists
+  vars:
+    stat_result: "{{ lookup('ansible.builtin.fileglob', '/dev/null', errors='ignore') }}"
+  changed_when: true
 
 - name: Remove Docker Compose service directories
   ansible.builtin.file:
-    path: "{{ item.project_dir }}"
+    path: "{{ cleanup_compose_deploy_dir }}/{{ item.path | dirname | basename }}"
     state: absent
-  loop: "{{ cleanup_compose_services }}"
+  loop: "{{ cleanup_compose_files.files }}"
 
 - name: Remove Nginx service configurations
+  ansible.builtin.find:
+    paths: "{{ cleanup_nginx_source_dir }}"
+    patterns: "*.conf"
+    file_type: file
+  delegate_to: localhost
+  become: false
+  register: cleanup_nginx_files
+
+- name: Remove Nginx configurations from server
   ansible.builtin.file:
-    path: "{{ cleanup_nginx_config_dir }}/{{ item }}"
+    path: "{{ cleanup_nginx_config_dir }}/{{ item.path | basename }}"
     state: absent
-  loop: "{{ cleanup_nginx_configs }}"
+  loop: "{{ cleanup_nginx_files.files }}"
 
 - name: Validate Nginx configuration
   ansible.builtin.command:
@@ -34,4 +50,3 @@
   ansible.builtin.service:
     name: "{{ cleanup_nginx_service }}"
     state: restarted
-

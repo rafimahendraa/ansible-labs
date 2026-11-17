@@ -2,6 +2,7 @@
 # Ansible inventory
 inventory/hosts.ini
 inventory/hosts
+inventory/files/nginx/ssl/
 
 # Secrets
 .env
@@ -9,6 +10,7 @@ inventory/hosts
 !.env.example
 *.pem
 *.key
+*.crt
 *.p12
 *.pfx
 id_rsa
@@ -22,7 +24,6 @@ secrets.yaml
 
 # Ansible
 *.retry
-
 # Python
 __pycache__/
 *.pyc

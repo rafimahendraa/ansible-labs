@@ -1,14 +1,9 @@
-
 ---
+# Docker Compose source directory
+docker_compose_source_dir: "{{ playbook_dir }}/../inventory/files"
+
 # Docker Compose deployment directory
-docker_compose_base_dir: /opt
+docker_compose_deploy_dir: /opt
 
-# Docker Compose services
-docker_compose_services:
-  - name: grafana
-    project_dir: /opt/grafana
-    compose_file: docker-compose.yml
-
-  - name: silo
-    project_dir: /opt/silo
-    compose_file: docker-compose.yml
+# Docker Compose filename
+docker_compose_filename: docker-compose.yml

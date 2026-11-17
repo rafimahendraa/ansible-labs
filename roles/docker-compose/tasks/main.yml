@@ -1,42 +1,41 @@
-
 ---
+- name: Find Docker Compose files
+  ansible.builtin.find:
+    paths: "{{ docker_compose_source_dir }}"
+    patterns: "{{ docker_compose_filename }}"
+    file_type: file
+    recurse: true
+  delegate_to: localhost
+  become: false
+  register: docker_compose_files
+
 - name: Create Docker Compose application directories
   ansible.builtin.file:
-    path: "{{ item.project_dir }}"
+    path: "{{ docker_compose_deploy_dir }}/{{ item.path | dirname | basename }}"
     state: directory
     owner: root
     group: root
     mode: "0755"
-  loop: "{{ docker_compose_services }}"
+  loop: "{{ docker_compose_files.files }}"
 
 - name: Copy Docker Compose files to target server
   ansible.builtin.copy:
-    src: "{{ playbook_dir }}/../inventory/files/{{ item.name }}/{{ item.compose_file }}"
-    dest: "{{ item.project_dir }}/{{ item.compose_file }}"
+    src: "{{ item.path }}"
+    dest: "{{ docker_compose_deploy_dir }}/{{ item.path | dirname | basename }}/{{ docker_compose_filename }}"
     owner: root
     group: root
     mode: "0644"
-  loop: "{{ docker_compose_services }}"
-
-- name: Copy Silo environment file securely
-  ansible.builtin.copy:
-    src: "{{ playbook_dir }}/../inventory/files/silo/.env"
-    dest: "/opt/silo/.env"
-    owner: root
-    group: root
-    mode: "0600"
-  when: "'silo' in (docker_compose_services | map(attribute='name') | list)"
+  loop: "{{ docker_compose_files.files }}"
 
 - name: Validate Docker Compose configuration
   ansible.builtin.command:
-    cmd: "docker compose -f {{ item.compose_file }} config --quiet"
-    chdir: "{{ item.project_dir }}"
+    cmd: "docker compose -f {{ docker_compose_filename }} config --quiet"
+    chdir: "{{ docker_compose_deploy_dir }}/{{ item.path | dirname | basename }}"
   changed_when: false
-  loop: "{{ docker_compose_services }}"
+  loop: "{{ docker_compose_files.files }}"
 
 - name: Deploy Docker Compose applications
   ansible.builtin.command:
-    cmd: "docker compose -f {{ item.compose_file }} up -d"
-    chdir: "{{ item.project_dir }}"
-  loop: "{{ docker_compose_services }}"
-
+    cmd: "docker compose -f {{ docker_compose_filename }} up -d"
+    chdir: "{{ docker_compose_deploy_dir }}/{{ item.path | dirname | basename }}"
+  loop: "{{ docker_compose_files.files }}"

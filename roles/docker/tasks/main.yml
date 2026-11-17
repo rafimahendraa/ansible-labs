@@ -6,20 +6,6 @@
       - ansible_distribution_version in ["24.04", "26.04"]
     fail_msg: "Docker role supports Ubuntu 24.04 and 26.04 only."
 
-- name: Remove conflicting Ubuntu Docker packages
-  ansible.builtin.apt:
-    name:
-      - docker.io
-      - docker-doc
-      - docker-compose
-      - docker-compose-v2
-      - docker-buildx
-      - podman-docker
-      - containerd
-      - runc
-    state: absent
-    purge: true
-
 - name: Install Docker repository prerequisites
   ansible.builtin.apt:
     name:
@@ -29,39 +15,41 @@
     update_cache: true
     cache_valid_time: 3600
 
-- name: Create APT keyring directory
-  ansible.builtin.file:
-    path: "{{ docker_apt_keyring_dir }}"
-    state: directory
-    owner: root
-    group: root
-    mode: "0755"
+- name: Configure Docker APT repository
+  block:
+    - name: Create APT keyring directory
+      ansible.builtin.file:
+        path: "{{ docker_apt_keyring_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
 
-- name: Download Docker official GPG key
-  ansible.builtin.get_url:
-    url: "{{ docker_gpg_key_url }}"
-    dest: "{{ docker_apt_keyring }}"
-    owner: root
-    group: root
-    mode: "0644"
+    - name: Download Docker official GPG key
+      ansible.builtin.get_url:
+        url: "{{ docker_gpg_key_url }}"
+        dest: "{{ docker_apt_keyring }}"
+        owner: root
+        group: root
+        mode: "0644"
 
-- name: Get system architecture
-  ansible.builtin.command:
-    cmd: dpkg --print-architecture
-  register: docker_architecture_result
-  changed_when: false
+    - name: Get system architecture
+      ansible.builtin.command:
+        cmd: dpkg --print-architecture
+      register: docker_architecture_result
+      changed_when: false
 
-- name: Add Docker official APT repository
-  ansible.builtin.apt_repository:
-    repo: >-
-      deb [arch={{ docker_architecture_result.stdout }}
-      signed-by={{ docker_apt_keyring }}]
-      {{ docker_repository_url }}
-      {{ ansible_distribution_release }}
-      {{ docker_repository_channel }}
-    filename: "{{ docker_repository_filename }}"
-    state: present
-    update_cache: true
+    - name: Add Docker official APT repository
+      ansible.builtin.apt_repository:
+        repo: >-
+          deb [arch={{ docker_architecture_result.stdout }}
+          signed-by={{ docker_apt_keyring }}]
+          {{ docker_repository_url }}
+          {{ ansible_distribution_release }}
+          {{ docker_repository_channel }}
+        filename: "{{ docker_repository_filename }}"
+        state: present
+        update_cache: true
 
 - name: Install Docker Engine and plugins
   ansible.builtin.apt:
@@ -69,11 +57,6 @@
     state: present
     update_cache: true
   register: docker_install_result
-
-- name: Check if Docker containers directory exists
-  ansible.builtin.stat:
-    path: /var/lib/docker/containers
-  register: docker_containers_dir
 
 - name: Ensure Docker root directories exist
   ansible.builtin.file:
@@ -86,33 +69,20 @@
     - /var/lib/docker
     - /var/lib/docker/containers
 
-- name: Restart containerd and Docker service when initialized
+- name: Ensure containerd and Docker services are running
   ansible.builtin.service:
     name: "{{ item }}"
-    state: restarted
+    state: "{{ 'restarted' if docker_install_result.changed else 'started' }}"
     enabled: true
   loop:
     - containerd
     - "{{ docker_service_name }}"
-  when: docker_install_result.changed or not docker_containers_dir.stat.exists
 
-- name: Ensure Docker service is enabled and running
-  ansible.builtin.service:
-    name: "{{ docker_service_name }}"
-    state: started
-    enabled: true
-
-- name: Verify Docker Engine
+- name: Verify Docker installation
   ansible.builtin.command:
-    cmd: docker version
+    cmd: "{{ item }}"
   changed_when: false
-
-- name: Verify Docker Compose
-  ansible.builtin.command:
-    cmd: docker compose version
-  changed_when: false
-
-- name: Verify Docker Buildx
-  ansible.builtin.command:
-    cmd: docker buildx version
-  changed_when: false
+  loop:
+    - docker version
+    - docker compose version
+    - docker buildx version
