@@ -1,0 +1,37 @@
+
+---
+- name: Check Docker Compose files
+  ansible.builtin.stat:
+    path: "{{ item.project_dir }}/{{ item.compose_file }}"
+  loop: "{{ cleanup_compose_services }}"
+  register: compose_file_checks
+
+- name: Stop and remove Docker Compose services
+  ansible.builtin.command:
+    cmd: docker compose -f {{ item.item.compose_file }} down
+    chdir: "{{ item.item.project_dir }}"
+  loop: "{{ compose_file_checks.results }}"
+  when: item.stat.exists
+
+- name: Remove Docker Compose service directories
+  ansible.builtin.file:
+    path: "{{ item.project_dir }}"
+    state: absent
+  loop: "{{ cleanup_compose_services }}"
+
+- name: Remove Nginx service configurations
+  ansible.builtin.file:
+    path: "{{ cleanup_nginx_config_dir }}/{{ item }}"
+    state: absent
+  loop: "{{ cleanup_nginx_configs }}"
+
+- name: Validate Nginx configuration
+  ansible.builtin.command:
+    cmd: nginx -t
+  changed_when: false
+
+- name: Restart Nginx
+  ansible.builtin.service:
+    name: "{{ cleanup_nginx_service }}"
+    state: restarted
+

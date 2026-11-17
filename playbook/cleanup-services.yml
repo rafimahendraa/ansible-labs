@@ -1,0 +1,7 @@
+---
+- name: Cleanup Docker Compose and Nginx Services
+  hosts: webservers
+  become: true
+
+  roles:
+    - cleanup-services

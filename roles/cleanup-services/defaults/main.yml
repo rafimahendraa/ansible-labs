@@ -1,0 +1,21 @@
+---
+# Docker Compose services to remove
+cleanup_compose_services:
+  - name: grafana
+    project_dir: /opt/grafana
+    compose_file: docker-compose.yml
+
+  - name: silo
+    project_dir: /opt/silo
+    compose_file: docker-compose.yml
+
+# Nginx service configuration files to remove
+cleanup_nginx_configs:
+  - grafana.conf
+  - silo.conf
+
+# Nginx configuration directory
+cleanup_nginx_config_dir: /etc/nginx/conf.d
+
+# Nginx service name
+cleanup_nginx_service: nginx
